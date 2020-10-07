@@ -1,0 +1,196 @@
+module fsmLogic (
+    input clk,  // clock
+    input rst,  // reset
+    input io_button[5],
+    output a, output b, output cin,
+    input rst_n, //this is the physical reset button on board
+    input sum, input carry,
+    output io_led [3][8]
+  ) {
+  fsm state(.clk(clk), .rst(rst)) = {IDLE, TEST000, TEST001,TEST010,TEST011,TEST100,TEST101,TEST110, TEST111, SUCC, FAIL};
+  always {
+    a = 0;
+    b = 0;
+    cin = 0;
+    io_led[2][0]=1;  //i just wanna put in some io_led values at the start before jumping into state idle
+    io_led[2][1]=1;
+    io_led[2][2]=1;
+    io_led[2][3]=1;
+    io_led[2][4]=1;
+    io_led[2][5]=1;  //i just wanna put in some io_led values at the start before jumping into state idle
+    io_led[2][6]=1;
+    io_led[2][7]=1;
+    io_led[0][1]=1;
+    io_led[0][7]=1;
+    case(state.q){
+      state.IDLE:
+      if(io_button[1]==1){
+        state.d = state.TEST000; 
+          }
+      state.TEST000:
+        a = 0; b = 0; cin = 0; //supply inputs 0 for a,b,cin
+        if(sum == 0 & carry==0){
+        state.d=state.TEST001;
+        }
+        else if (sum != 0 || carry != 0) { // if either sum or cum is not 0
+          state.d = state.FAIL;
+        }
+        
+        // If the reset button is pressed,  reset the state to IDLE state      
+        if (rst == 0) {
+          state.d = state.IDLE;
+        }
+        
+        //the reason for not putting this as an else if above is because we want the case to be readily available as and when the user presses the reset button.
+      state.TEST001:
+       a = 0;
+       b = 0;
+       cin = 1;
+       io_led[2][0] = 0;
+       io_led[2][1] = 0;
+       io_led[2][2] = 1;
+       io_led[2][3] = sum;
+       io_led[2][4] = carry;
+       if (sum == 1 & carry == 0) {
+          state.d = state.TEST010;
+        }
+       else if (sum != 1 | carry != 0) {
+          state.d = state.FAIL;
+        }
+        
+       if(rst_n == 0) {
+          state.d = state.IDLE;
+        }
+      state.TEST010:
+       a = 0;
+       b = 1;
+       cin = 0;
+       io_led[2][0] = 0;
+       io_led[2][1] = 1;
+       io_led[2][2] = 0;
+       io_led[2][3] = sum;
+       io_led[2][4] = carry; 
+       if (sum == 1 & carry == 0) {
+          state.d = state.TEST011;
+        }
+         
+       else if (sum != 1 | carry != 0) {
+          state.d = state.FAIL;
+        }
+        
+       if(rst_n == 0) {
+          state.d = state.IDLE;
+        }
+      state.TEST011:
+       a = 0;
+       b = 1;
+       cin = 1;
+       io_led[2][0] = 0;
+       io_led[2][1] = 1;
+       io_led[2][2] = 1;
+       io_led[2][3] = sum;
+       io_led[2][4] = carry;
+       if (sum == 0 & carry == 1) {
+          state.d = state.TEST101;
+        }
+         
+       else if (sum != 0 | carry != 1) {
+          state.d = state.FAIL;
+        }
+        
+       if(rst_n == 0) {
+          state.d = state.IDLE;
+        }
+      state.TEST100:
+        a = 1;
+        b = 0;
+        cin = 0;
+        io_led[2][0] = 1;
+        io_led[2][1] = 0;
+        io_led[2][2] = 0;
+        io_led[2][3] = sum;
+        io_led[2][4] = carry;
+        if (sum == 1 & carry == 0) {
+          state.d = state.TEST101;
+        } 
+        else if (sum != 1 | carry != 0) {
+          state.d = state.FAIL;
+        }
+        if(rst_n == 0) {
+          state.d = state.IDLE;
+        }
+          
+      state.TEST101:
+       a = 1;
+       b = 0;
+       cin = 1;
+       io_led[2][0] = 1;
+       io_led[2][1] = 0;
+       io_led[2][2] = 1;
+       io_led[2][3] = sum;
+       io_led[2][4] = carry;
+       if (sum == 0 & carry == 1) {
+          state.d = state.TEST110;
+        }
+        else if (sum != 0 | carry != 1) {
+          state.d = state.FAIL;
+        }
+        
+        if(rst_n == 0) {
+          state.d = state.IDLE;
+        }
+         
+      state.TEST110:
+       a = 1;
+       b = 1;
+       cin = 0;
+       io_led[2][0] = 1;
+       io_led[2][1] = 1;
+       io_led[2][2] = 0;
+       io_led[2][3] = sum;
+       io_led[2][4] = carry;
+       if (sum == 0 & carry == 1) {
+          state.d = state.TEST111;
+        }
+       else if (sum != 0 | carry != 1) {
+          state.d = state.FAIL;
+        }
+        
+       if(rst_n == 0) {
+          state.d = state.IDLE;
+        }
+      state.TEST111:
+       a = 1;
+       b = 1;
+       cin = 1;
+       io_led[2][0] = 1;
+       io_led[2][1] = 1;
+       io_led[2][2] = 1;
+       io_led[2][3] = sum;
+       io_led[2][4] = carry; 
+       if (sum == 1 & carry == 1) {
+          state.d = state.SUCC;
+        }
+       else if (sum != 1 | carry != 1) {
+          state.d = state.FAIL;
+        }
+        
+        
+       if(rst_n == 0) {
+          state.d = state.IDLE;
+        }
+      state.SUCC:
+      io_led[0][1] = 1;
+        // If reset button is pressed, enter IDLE state
+        if (rst_n == 0) {
+          state.d = state.IDLE;
+        }
+      state.FAIL:
+        io_led[0][7]=1;
+        // If reset button is pressed, enter IDLE state
+        if (rst_n == 0) {
+          state.d = state.IDLE;
+        }
+      
+  }
+}

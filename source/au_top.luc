@@ -1,0 +1,47 @@
+module au_top (
+    input clk,              // 100MHz clock
+    input rst_n,            // reset button (active low)
+    output led [8],         // 8 user controllable LEDs
+    output io_led [3][8],   // LEDs on IO Shield
+    output io_seg [8],      // 7-segment LEDs on IO Shield
+    output io_sel [4],      // Digit select on IO Shield
+    input io_button [5],    // 5 buttons on IO Shield
+    output a,
+    output b,
+    output cin, 
+    input sum,
+    input carry,    
+    input io_dip [3][8],    // DIP switches on IO Shield
+    input usb_rx,           // USB->Serial input
+    output usb_tx          // USB->Serial output
+    
+    //unused signals must still be defined cuz io element constraints are fixed
+  ) {
+  sig rst;                  // reset signal
+  counter slowclock(#SIZE(1),#DIV(26), .clk(clk), .rst(rst));
+  fsmLogic fsmInstance(.clk(slowclock.value), .rst(rst));
+  .clk(slowclock.value) {
+    // The reset conditioner is used to synchronize the reset signal to the FPGA
+    // clock. This ensures the entire FPGA comes out of reset at the same time.
+    reset_conditioner reset_cond;
+  }
+  
+  always {
+    reset_cond.in = ~rst_n; // input raw inverted reset signal
+    rst = reset_cond.out;   // conditioned reset
+        
+    led = 8h00;             // turn LEDs on fpga board(not io shield) off
+    
+    fsmInstance.carry = carry;
+    fsmInstance.sum = sum;
+    fsmInstance.io_button = io_button[1];
+    a = fsmInstance.a;
+    b = fsmInstance.b;
+    cin = fsmInstance.cin;
+    fsmInstance.rst_n=rst_n;
+    usb_tx = usb_rx;
+    io_led = fsmInstance.io_led;    // turn LEDs off. it doesnt make sense for this to be always off right
+    io_seg = 8hff;          // turn segments off
+    io_sel = 4hf;           // select no digits
+  }
+}

@@ -1,0 +1,5 @@
+pin a C46;
+pin b C43;
+pin cin C40;
+pin sum C48;
+pin carry C45;
